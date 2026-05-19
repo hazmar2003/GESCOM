@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+	--font-sans: "font", sans-serif;
+	--font-mono: "monospace", monospace;
+}
+
+/* GESOTRA brand colors — override HeroUI accent (primary buttons, focus ring) */
+:root {
+	--accent: #1e6b2e;
+	--accent-foreground: #ffffff;
+	--color-primary: #1e6b2e;
+	--color-primary-foreground: #ffffff;
+}
+
+/* ===== Print styles for PDF export ===== */
+@media print {
+	.no-print { display: none !important; }
+	nav, header, aside, [data-sidebar], footer { display: none !important; }
+	body { background: white !important; color: black !important; font-size: 12px; }
+	table { border-collapse: collapse; width: 100%; }
+	th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+	th { background: #f0f0f0 !important; }
+}

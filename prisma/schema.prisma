@@ -1,0 +1,275 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────
+
+enum RolUsuario {
+  admin
+  supervisor
+}
+
+enum TipoNorma {
+  rendimiento
+  tiempo
+}
+
+enum EstadoOrdenTrabajo {
+  pendiente
+  validada
+  rechazada
+}
+
+// ─── Models ────────────────────────────────────────────────────
+
+model Empresa {
+  id             Int      @id @default(autoincrement())
+  nombre         String   @db.VarChar(200)
+  nombre_corto   String   @db.VarChar(50)
+  codigo_empresa String   @unique @db.VarChar(20)
+  ubicacion      String?  @db.VarChar(200)
+  telefono       String?  @db.VarChar(20)
+  email          String?  @db.VarChar(100)
+  activo         Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  uebs         UEB[]
+  usuarios     Usuario[]
+  catalogos    Catalogo[]
+  actividades  Actividad[]
+  trabajadores Trabajador[]
+  equipamiento Equipamiento[]
+  expedientes  Expediente[]
+  cierres      CierreMensual[]
+}
+
+model UEB {
+  id         Int      @id @default(autoincrement())
+  nombre     String   @db.VarChar(150)
+  ubicacion  String?  @db.VarChar(200)
+  empresa_id Int
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  empresa      Empresa        @relation(fields: [empresa_id], references: [id])
+  usuarios     Usuario[]
+  trabajadores Trabajador[]
+  equipamiento Equipamiento[]
+  expedientes  Expediente[]
+}
+
+model Usuario {
+  id            Int        @id @default(autoincrement())
+  username      String     @unique @db.VarChar(100)
+  password_hash String     @db.VarChar(255)
+  nombre        String?    @db.VarChar(150)
+  rol           RolUsuario
+  empresa_id    Int
+  ueb_id        Int?
+  trabajador_id Int?
+  activo        Boolean    @default(true)
+  ultimo_login  DateTime?
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  empresa              Empresa        @relation(fields: [empresa_id], references: [id])
+  ueb                  UEB?           @relation(fields: [ueb_id], references: [id])
+  ordenes_creadas      OrdenTrabajo[] @relation("OTCreador")
+  ordenes_actualizadas OrdenTrabajo[] @relation("OTActualizador")
+  cierres_realizados   CierreMensual[]
+}
+
+model Catalogo {
+  id         Int      @id @default(autoincrement())
+  nombre     String   @db.VarChar(150)
+  empresa_id Int
+  activo     Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  empresa         Empresa         @relation(fields: [empresa_id], references: [id])
+  tipos_actividad TipoActividad[]
+}
+
+model TipoActividad {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(150)
+  catalogo_id Int
+  activo      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  catalogo    Catalogo    @relation(fields: [catalogo_id], references: [id])
+  actividades Actividad[]
+}
+
+model Actividad {
+  id                Int      @id @default(autoincrement())
+  codigo            String   @db.VarChar(20)
+  nombre            String   @db.VarChar(200)
+  unidad_medida     String   @db.VarChar(50)
+  norma_tiempo      Float
+  norma_rendimiento Float
+  tasa_salarial     Float
+  tipo_actividad_id Int
+  empresa_id        Int
+  activo            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  tipo_actividad  TipoActividad             @relation(fields: [tipo_actividad_id], references: [id])
+  empresa         Empresa                   @relation(fields: [empresa_id], references: [id])
+  planificaciones PlanificacionExpediente[]
+}
+
+model Trabajador {
+  id               Int       @id @default(autoincrement())
+  ci               String?   @unique @db.VarChar(11)
+  nombre           String    @db.VarChar(100)
+  apellidos        String    @db.VarChar(150)
+  cargo            String?   @db.VarChar(100)
+  fecha_nacimiento DateTime? @db.Date
+  ueb_id           Int
+  empresa_id       Int
+  activo           Boolean   @default(true)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  ueb     UEB                      @relation(fields: [ueb_id], references: [id])
+  empresa Empresa                  @relation(fields: [empresa_id], references: [id])
+  ordenes OrdenTrabajoTrabajador[]
+}
+
+model Equipamiento {
+  id                Int      @id @default(autoincrement())
+  nombre            String   @db.VarChar(150)
+  codigo_inventario String   @unique @db.VarChar(50)
+  tipo              String?  @db.VarChar(100)
+  ueb_id            Int
+  empresa_id        Int
+  activo            Boolean  @default(true)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  ueb     UEB                       @relation(fields: [ueb_id], references: [id])
+  empresa Empresa                   @relation(fields: [empresa_id], references: [id])
+  ordenes OrdenTrabajoEquipamiento[]
+}
+
+model Expediente {
+  id                Int       @id @default(autoincrement())
+  numero_expediente String    @db.VarChar(30)
+  nombre            String    @db.VarChar(200)
+  zona              String?   @db.VarChar(100)
+  ueb_id            Int
+  empresa_id        Int
+  fecha_inicio      DateTime  @db.Date
+  fecha_fin         DateTime? @db.Date
+  activo            Boolean   @default(true)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  ueb             UEB                       @relation(fields: [ueb_id], references: [id])
+  empresa         Empresa                   @relation(fields: [empresa_id], references: [id])
+  planificaciones PlanificacionExpediente[]
+}
+
+model PlanificacionExpediente {
+  id                   Int       @id @default(autoincrement())
+  expediente_id        Int
+  actividad_id         Int
+  medida_planificada   Float
+  frecuencia_veces_mes Int
+  tipo_norma           TipoNorma @default(rendimiento)
+  activo               Boolean   @default(true)
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  expediente Expediente              @relation(fields: [expediente_id], references: [id])
+  actividad  Actividad               @relation(fields: [actividad_id], references: [id])
+  ordenes    OrdenTrabajo[]
+  reportes   ReporteMensualDetalle[]
+}
+
+model OrdenTrabajo {
+  id                          Int                @id @default(autoincrement())
+  planificacion_expediente_id Int
+  fecha_ejecucion             DateTime           @db.Date
+  cantidad_realizada          Float
+  estado                      EstadoOrdenTrabajo @default(pendiente)
+  observaciones               String?            @db.Text
+  created_by                  Int
+  updated_by                  Int?
+  motivo_modificacion         String?            @db.Text
+  created_at                  DateTime           @default(now())
+  updated_at                  DateTime           @updatedAt
+
+  planificacion PlanificacionExpediente  @relation(fields: [planificacion_expediente_id], references: [id])
+  creador       Usuario                  @relation("OTCreador",      fields: [created_by], references: [id])
+  actualizador  Usuario?                 @relation("OTActualizador", fields: [updated_by], references: [id])
+  trabajadores  OrdenTrabajoTrabajador[]
+  equipamiento  OrdenTrabajoEquipamiento[]
+}
+
+model OrdenTrabajoTrabajador {
+  orden_trabajo_id Int
+  trabajador_id    Int
+
+  orden_trabajo OrdenTrabajo @relation(fields: [orden_trabajo_id], references: [id], onDelete: Cascade)
+  trabajador    Trabajador   @relation(fields: [trabajador_id],    references: [id])
+
+  @@id([orden_trabajo_id, trabajador_id])
+}
+
+model OrdenTrabajoEquipamiento {
+  orden_trabajo_id Int
+  equipamiento_id  Int
+
+  orden_trabajo OrdenTrabajo @relation(fields: [orden_trabajo_id], references: [id], onDelete: Cascade)
+  equipamiento  Equipamiento @relation(fields: [equipamiento_id],  references: [id])
+
+  @@id([orden_trabajo_id, equipamiento_id])
+}
+
+model CierreMensual {
+  id           Int      @id @default(autoincrement())
+  anio         Int
+  mes          Int
+  empresa_id   Int
+  fecha_cierre DateTime @default(now())
+  cerrado_por  Int
+
+  empresa  Empresa                 @relation(fields: [empresa_id],  references: [id])
+  usuario  Usuario                 @relation(fields: [cerrado_por], references: [id])
+  reportes ReporteMensualDetalle[]
+
+  @@unique([anio, mes, empresa_id])
+}
+
+model ReporteMensualDetalle {
+  id                          Int       @id @default(autoincrement())
+  cierre_mensual_id           Int
+  planificacion_expediente_id Int
+  cantidad_planificada_mes    Float
+  cantidad_ejecutada_mes      Float
+  porcentaje_cumplimiento     Float
+  tasa_salarial_aplicada      Float
+  salario_devengado           Float
+  norma_aplicada              Float
+  tipo_norma                  TipoNorma
+
+  cierre_mensual CierreMensual           @relation(fields: [cierre_mensual_id],           references: [id], onDelete: Cascade)
+  planificacion  PlanificacionExpediente @relation(fields: [planificacion_expediente_id], references: [id])
+}
+
