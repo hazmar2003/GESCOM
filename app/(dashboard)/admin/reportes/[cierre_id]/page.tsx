@@ -244,8 +244,8 @@ export default function ReporteCierre() {
         /* ── Vista Por Expediente ──────────────────────────────────── */
         <Table aria-label="Reporte por expediente" removeWrapper>
           <TableHeader>
-            <TableColumn>UEB</TableColumn>
             <TableColumn>Expediente</TableColumn>
+            <TableColumn>UEB</TableColumn>
             <TableColumn># Act.</TableColumn>
             <TableColumn>Planificado</TableColumn>
             <TableColumn>Ejecutado</TableColumn>
@@ -256,8 +256,8 @@ export default function ReporteCierre() {
           <TableBody>
             {porExpediente.map((e, i) => (
               <TableRow key={i}>
-                <TableCell className="text-sm text-default-500 whitespace-nowrap">{e.ueb_nombre}</TableCell>
                 <TableCell className="font-medium text-sm whitespace-nowrap">{e.exp_numero} — {e.exp_nombre}</TableCell>
+                <TableCell className="text-sm text-default-500 whitespace-nowrap">{e.ueb_nombre}</TableCell>
                 <TableCell className="font-mono text-sm text-center">{e.acts}</TableCell>
                 <TableCell className="font-mono text-sm">{fmtNum(e.plan)}</TableCell>
                 <TableCell className="font-mono text-sm">{fmtNum(e.ejec)}</TableCell>

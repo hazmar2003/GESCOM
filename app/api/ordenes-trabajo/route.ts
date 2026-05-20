@@ -45,8 +45,14 @@ export async function GET(req: NextRequest) {
     if (planId) where.planificacion_expediente_id = Number(planId);
     if (fechaDesde || fechaHasta) {
       const rango: { gte?: Date; lte?: Date } = {};
-      if (fechaDesde) rango.gte = new Date(fechaDesde);
-      if (fechaHasta) rango.lte = new Date(fechaHasta + "T23:59:59");
+      if (fechaDesde) {
+        const [year, month, day] = fechaDesde.split("-");
+        rango.gte = new Date(Number(year), Number(month) - 1, Number(day), 0, 0, 0);
+      }
+      if (fechaHasta) {
+        const [year, month, day] = fechaHasta.split("-");
+        rango.lte = new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59);
+      }
       where.fecha_ejecucion = rango;
     }
 

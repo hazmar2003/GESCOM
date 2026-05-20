@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/server/prisma";
-import { getAuthPayload, unauthorized, serverError } from "@/lib/server/apiHelpers";
+import { getAuthPayload, unauthorized, forbidden, serverError } from "@/lib/server/apiHelpers";
 
 export async function GET(req: NextRequest) {
   const auth = getAuthPayload(req);
@@ -23,9 +23,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const auth = getAuthPayload(req);
-  if (!auth || auth.rol !== "admin") return unauthorized();
+  if (!auth) return unauthorized();
   try {
     const body = await req.json();
+    // Supervisor can only create equipment for their own UEB
+    if (auth.rol === "supervisor") {
+      if (!auth.ueb_id || body.ueb_id !== auth.ueb_id) return forbidden();
+    }
     const eq = await prisma.equipamiento.create({
       data: {
         nombre: body.nombre,

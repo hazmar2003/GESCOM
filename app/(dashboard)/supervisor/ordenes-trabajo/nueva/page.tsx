@@ -12,7 +12,6 @@ import { createOrdenTrabajo } from "@/lib/services/orden-trabajo.service";
 import { getExpedientes, getPlanificaciones } from "@/lib/services/expediente.service";
 import { getTrabajadores } from "@/lib/services/trabajador.service";
 import { getEquipamiento } from "@/lib/services/equipamiento.service";
-import { getActividadById } from "@/lib/services/catalogo.service";
 import type {
   Expediente, PlanificacionExpediente, Trabajador,
   Equipamiento, Actividad,
@@ -48,8 +47,8 @@ export default function NuevaOrdenTrabajo() {
       getEquipamiento(),
     ]).then(([exps, trabs, equips]) => {
       setExpedientes(exps);
-      setTrabajadores(trabs);
-      setEquipamientos(equips);
+      setTrabajadores(trabs.filter((t) => t.activo));
+      setEquipamientos(equips.filter((e) => e.activo));
       setLoading(false);
     });
   }, [empresa, usuario]);
@@ -63,13 +62,14 @@ export default function NuevaOrdenTrabajo() {
     setPlanificaciones(planifs);
   };
 
-  const onPlanifChange = async (id: string) => {
+  const onPlanifChange = (id: string) => {
     setPlanifId(id);
     if (!id) { setActividadSeleccionada(null); return; }
     const planif = planificaciones.find((p) => p.id === Number(id));
     if (planif) {
-      const act = await getActividadById(planif.actividad_id);
-      setActividadSeleccionada(act);
+      // actividad already included in the planificacion response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setActividadSeleccionada((planif as any).actividad ?? null);
     }
   };
 
@@ -138,11 +138,15 @@ export default function NuevaOrdenTrabajo() {
               selectedKeys={planifId ? [planifId] : []}
               onSelectionChange={(k) => onPlanifChange([...k][0] as string ?? "")}
             >
-              {planificaciones.map((p) => (
-                <SelectItem key={String(p.id)}>
-                  Planif. #{p.id} — {p.medida_planificada} {actividadSeleccionada?.unidad_medida ?? ""} × {p.frecuencia_veces_mes}x/mes
-                </SelectItem>
-              ))}
+              {planificaciones.map((p) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const act = (p as any).actividad;
+                return (
+                  <SelectItem key={String(p.id)}>
+                    {act?.nombre ?? `Actividad #${p.actividad_id}`} — {p.medida_planificada} {act?.unidad_medida ?? ""} × {p.frecuencia_veces_mes}x/mes
+                  </SelectItem>
+                );
+              })}
             </Select>
 
             {actividadSeleccionada && (

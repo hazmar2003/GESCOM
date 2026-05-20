@@ -110,9 +110,19 @@ export async function PUT(req: NextRequest, { params }: Params) {
 
 export async function DELETE(req: NextRequest, { params }: Params) {
   const auth = getAuthPayload(req);
-  if (!auth || auth.rol !== "admin") return unauthorized();
+  if (!auth) return unauthorized();
   try {
     const { id } = await params;
+    const existing = await prisma.ordenTrabajo.findUnique({ where: { id: Number(id) } });
+    if (!existing) return notFound("Orden de trabajo");
+
+    // Supervisors can only delete their own pending orders
+    if (auth.rol === "supervisor") {
+      if (existing.created_by !== auth.sub || existing.estado !== "pendiente") {
+        return forbidden();
+      }
+    }
+
     await prisma.ordenTrabajo.delete({ where: { id: Number(id) } });
     return NextResponse.json({ ok: true });
   } catch (e) {

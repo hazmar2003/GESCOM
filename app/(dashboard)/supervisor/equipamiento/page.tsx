@@ -53,6 +53,12 @@ export default function SupervisorEquipamiento() {
     setEliminando(e); onDeleteOpen();
   };
 
+  const handleActivar = async (e: Equipamiento) => {
+    if (e.ueb_id !== ueb?.id) return;
+    try { await updateEquipamiento(e.id, { activo: true }); cargar(); }
+    catch { /* ignore */ }
+  };
+
   const handleGuardar = async () => {
     if (!empresa || !ueb) return;
     if (!codigo.trim() || !nombre.trim()) {
@@ -122,7 +128,10 @@ export default function SupervisorEquipamiento() {
                 <TableCell>
                   <div className="flex gap-1">
                     <Button size="sm" variant="flat" onPress={() => abrirEditar(e)}>Editar</Button>
-                    <Button size="sm" variant="flat" color="danger" onPress={() => abrirEliminar(e)}>Desactivar</Button>
+                    {e.activo
+                      ? <Button size="sm" variant="flat" color="danger" onPress={() => abrirEliminar(e)}>Desactivar</Button>
+                      : <Button size="sm" variant="flat" color="success" onPress={() => handleActivar(e)}>Activar</Button>
+                    }
                   </div>
                 </TableCell>
               </TableRow>

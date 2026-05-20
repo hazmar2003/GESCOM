@@ -54,6 +54,12 @@ export default function SupervisorTrabajadores() {
     setEliminando(t); onDeleteOpen();
   };
 
+  const handleActivar = async (t: Trabajador) => {
+    if (t.ueb_id !== ueb?.id) return;
+    try { await updateTrabajador(t.id, { activo: true }); cargar(); }
+    catch { /* ignore */ }
+  };
+
   const handleGuardar = async () => {
     if (!empresa || !ueb) return;
     if (!ci.trim() || !nombre.trim() || !apellidos.trim()) {
@@ -124,7 +130,10 @@ export default function SupervisorTrabajadores() {
                 <TableCell>
                   <div className="flex gap-1">
                     <Button size="sm" variant="flat" onPress={() => abrirEditar(t)}>Editar</Button>
-                    <Button size="sm" variant="flat" color="danger" onPress={() => abrirEliminar(t)}>Desactivar</Button>
+                    {t.activo
+                      ? <Button size="sm" variant="flat" color="danger" onPress={() => abrirEliminar(t)}>Desactivar</Button>
+                      : <Button size="sm" variant="flat" color="success" onPress={() => handleActivar(t)}>Activar</Button>
+                    }
                   </div>
                 </TableCell>
               </TableRow>

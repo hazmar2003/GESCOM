@@ -102,9 +102,10 @@ export default function AdminTrabajadores() {
       </div>
 
       <div className="max-w-sm">
-        <Select label="Filtrar por UEB" placeholder="Todas las UEBs"
-          selectedKeys={filtroUEB ? [filtroUEB] : []}
-          onSelectionChange={(k) => setFiltroUEB([...k][0] as string ?? "")}>
+        <Select label="Filtrar por UEB"
+          selectedKeys={[filtroUEB || ""]}
+          onSelectionChange={(k) => { const v = [...k][0] as string; setFiltroUEB(v === "" ? "" : v ?? ""); }}>
+          <SelectItem key="">Todas las UEBs</SelectItem>
           {uebs.map((u) => <SelectItem key={String(u.id)}>{u.nombre}</SelectItem>)}
         </Select>
       </div>

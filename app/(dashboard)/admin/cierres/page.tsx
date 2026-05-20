@@ -96,7 +96,6 @@ export default function AdminCierres() {
             <div className="w-36">
               <Select
                 label="Año"
-                size="sm"
                 selectedKeys={[String(anioSel)]}
                 onSelectionChange={(k) => setAnioSel(Number([...k][0]))}
               >
@@ -108,7 +107,6 @@ export default function AdminCierres() {
             <div className="w-44">
               <Select
                 label="Mes"
-                size="sm"
                 selectedKeys={[String(mesSel)]}
                 onSelectionChange={(k) => setMesSel(Number([...k][0]))}
               >

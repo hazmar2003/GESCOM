@@ -47,8 +47,8 @@ export default function EditarOrdenTrabajo() {
         setTrabajadoresSeleccionados(ot.trabajadores.map((t) => String(t.id)));
         setEquipamientosSeleccionados(ot.equipamiento.map((e) => String(e.id)));
       }
-      setTrabajadores(trabs);
-      setEquipamientos(equips);
+      setTrabajadores(trabs.filter((t) => t.activo));
+      setEquipamientos(equips.filter((e) => e.activo));
       setLoading(false);
     });
   }, [id, empresa, usuario]);

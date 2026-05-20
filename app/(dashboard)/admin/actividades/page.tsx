@@ -164,7 +164,6 @@ export default function AdminActividades() {
                       size="sm" variant="flat"
                       color={a.activo ? "danger" : "success"}
                       isDisabled={!a.activo && !catalogoActivoParaActividad(a)}
-                      title={!a.activo && !catalogoActivoParaActividad(a) ? "El catálogo está desactivado" : undefined}
                       onPress={() => { setEliminando(a); onDeleteOpen(); }}
                     >
                       {a.activo ? "Desactivar" : "Activar"}
