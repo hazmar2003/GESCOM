@@ -9,11 +9,12 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getTrabajadores, createTrabajador, updateTrabajador, deleteTrabajador } from "@/lib/services/trabajador.service";
 import type { Trabajador } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function SupervisorTrabajadores() {
   const { empresa, ueb } = useAuth();
   const [trabajadores, setTrabajadores] = useState<Trabajador[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -105,19 +106,18 @@ export default function SupervisorTrabajadores() {
         <Button color="primary" onPress={abrirCrear}>+ Nuevo trabajador</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Trabajadores" removeWrapper>
-          <TableHeader>
-            <TableColumn>CI</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Cargo</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay trabajadores registrados en tu UEB.">
-            {trabajadores.map((t) => (
+      <Table aria-label="Trabajadores" removeWrapper>
+        <TableHeader>
+          <TableColumn>CI</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Cargo</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay trabajadores registrados en tu UEB.">
+          {loading
+            ? <TableSkeleton columns={5} />
+            : trabajadores.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-mono text-sm">{t.ci ?? "—"}</TableCell>
                 <TableCell className="font-medium">{t.nombre} {t.apellidos}</TableCell>
@@ -137,10 +137,10 @@ export default function SupervisorTrabajadores() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       {/* Modal crear / editar */}
       <Modal isOpen={isOpen} onClose={onClose}>

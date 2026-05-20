@@ -9,11 +9,12 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getEquipamiento, createEquipamiento, updateEquipamiento, deleteEquipamiento } from "@/lib/services/equipamiento.service";
 import type { Equipamiento } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function SupervisorEquipamiento() {
   const { empresa, ueb } = useAuth();
   const [equipamientos, setEquipamientos] = useState<Equipamiento[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -103,19 +104,18 @@ export default function SupervisorEquipamiento() {
         <Button color="primary" onPress={abrirCrear}>+ Nuevo equipo</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Equipamiento" removeWrapper>
-          <TableHeader>
-            <TableColumn>Código</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Tipo</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay equipamiento registrado en tu UEB.">
-            {equipamientos.map((e) => (
+      <Table aria-label="Equipamiento" removeWrapper>
+        <TableHeader>
+          <TableColumn>Código</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Tipo</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay equipamiento registrado en tu UEB.">
+          {loading
+            ? <TableSkeleton columns={5} />
+            : equipamientos.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono text-sm">{e.codigo_inventario}</TableCell>
                 <TableCell className="font-medium">{e.nombre}</TableCell>
@@ -135,10 +135,10 @@ export default function SupervisorEquipamiento() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       {/* Modal crear / editar */}
       <Modal isOpen={isOpen} onClose={onClose}>

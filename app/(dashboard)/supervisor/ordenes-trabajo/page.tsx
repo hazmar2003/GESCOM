@@ -10,6 +10,7 @@ import { getOrdenesTrabajo } from "@/lib/services/orden-trabajo.service";
 import { getMesActualEstado } from "@/lib/services/cierre.service";
 import type { OrdenTrabajoDetalle, EstadoOrdenTrabajo } from "@/types/models";
 import Link from "next/link";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 const ESTADO_COLOR: Record<EstadoOrdenTrabajo, "warning" | "success" | "danger"> = {
   pendiente: "warning",
@@ -92,20 +93,19 @@ export default function SupervisorOrdenesTrabajo() {
         <Input label="Hasta" type="date" value={filtroHasta} onValueChange={setFiltroHasta} />
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Mis órdenes de trabajo" removeWrapper>
-          <TableHeader>
-            <TableColumn>Fecha</TableColumn>
-            <TableColumn>Expediente</TableColumn>
-            <TableColumn>Actividad</TableColumn>
-            <TableColumn>Cantidad</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay órdenes de trabajo registradas.">
-            {ordenes.map((ot) => (
+      <Table aria-label="Mis órdenes de trabajo" removeWrapper>
+        <TableHeader>
+          <TableColumn>Fecha</TableColumn>
+          <TableColumn>Expediente</TableColumn>
+          <TableColumn>Actividad</TableColumn>
+          <TableColumn>Cantidad</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay órdenes de trabajo registradas.">
+          {loading
+            ? <TableSkeleton columns={6} />
+            : ordenes.map((ot) => (
               <TableRow key={ot.id}>
                 <TableCell className="whitespace-nowrap">{formatFecha(ot.fecha_ejecucion)}</TableCell>
                 <TableCell>
@@ -136,10 +136,10 @@ export default function SupervisorOrdenesTrabajo() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
     </div>
   );
 }

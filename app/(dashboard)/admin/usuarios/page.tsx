@@ -10,12 +10,13 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { getUsuarios, createUsuario, updateUsuario, toggleUsuarioActivo } from "@/lib/services/usuario.service";
 import { getUEBsByEmpresa } from "@/lib/services/ueb.service";
 import type { UsuarioPublico, UEB, RolUsuario } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminUsuarios() {
   const { empresa } = useAuth();
   const [uebs, setUebs] = useState<UEB[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioPublico[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isToggleOpen, onOpen: onToggleOpen, onClose: onToggleClose } = useDisclosure();
@@ -31,20 +32,19 @@ export default function AdminUsuarios() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!empresa) return;
-    getUEBsByEmpresa().then(setUebs);
-  }, [empresa]);
-
   const cargar = useCallback(async () => {
     if (!empresa) return;
-    setLoading(true);
     const data = await getUsuarios();
     setUsuarios(data);
-    setLoading(false);
   }, [empresa]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    if (!empresa) return;
+    setLoading(true);
+    Promise.all([getUsuarios(), getUEBsByEmpresa()])
+      .then(([usrs, ubs]) => { setUsuarios(usrs); setUebs(ubs); })
+      .finally(() => setLoading(false));
+  }, [empresa]);
 
   const resetForm = () => { setUsername(""); setPassword(""); setNombre(""); setRol("supervisor"); setUebId(""); setError(""); };
   const abrirCrear = () => { setEditando(null); resetForm(); onOpen(); };
@@ -90,20 +90,19 @@ export default function AdminUsuarios() {
         <Button color="primary" onPress={abrirCrear}>+ Nuevo usuario</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Usuarios" removeWrapper>
-          <TableHeader>
-            <TableColumn>Usuario</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Rol</TableColumn>
-            <TableColumn>UEB</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay usuarios registrados.">
-            {usuarios.map((u) => (
+      <Table aria-label="Usuarios" removeWrapper>
+        <TableHeader>
+          <TableColumn>Usuario</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Rol</TableColumn>
+          <TableColumn>UEB</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay usuarios registrados.">
+          {loading
+            ? <TableSkeleton columns={6} />
+            : usuarios.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-mono text-sm">{u.username}</TableCell>
                 <TableCell className="text-sm">{u.nombre ?? "—"}</TableCell>
@@ -123,10 +122,10 @@ export default function AdminUsuarios() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>

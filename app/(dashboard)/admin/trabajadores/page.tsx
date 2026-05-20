@@ -10,13 +10,14 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { getTrabajadores, createTrabajador, updateTrabajador, deleteTrabajador } from "@/lib/services/trabajador.service";
 import { getUEBsByEmpresa } from "@/lib/services/ueb.service";
 import type { Trabajador, UEB } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminTrabajadores() {
   const { empresa } = useAuth();
   const [uebs, setUebs] = useState<UEB[]>([]);
   const [trabajadores, setTrabajadores] = useState<Trabajador[]>([]);
   const [filtroUEB, setFiltroUEB] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -32,20 +33,19 @@ export default function AdminTrabajadores() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!empresa) return;
-    getUEBsByEmpresa().then(setUebs);
-  }, [empresa]);
-
   const cargar = useCallback(async () => {
     if (!empresa) return;
-    setLoading(true);
     const data = await getTrabajadores();
     setTrabajadores(data);
-    setLoading(false);
-  }, [empresa, filtroUEB]);
+  }, [empresa]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    if (!empresa) return;
+    setLoading(true);
+    Promise.all([getTrabajadores(), getUEBsByEmpresa()])
+      .then(([trab, ubs]) => { setTrabajadores(trab); setUebs(ubs); })
+      .finally(() => setLoading(false));
+  }, [empresa]);
 
   const resetForm = () => { setCi(""); setNombre(""); setApellidos(""); setCargo(""); setUebId(""); setError(""); };
   const abrirCrear = () => { setEditando(null); resetForm(); onOpen(); };
@@ -110,20 +110,19 @@ export default function AdminTrabajadores() {
         </Select>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Trabajadores" removeWrapper>
-          <TableHeader>
-            <TableColumn>CI</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Cargo</TableColumn>
-            <TableColumn>UEB</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay trabajadores registrados.">
-            {trabajadoresFiltrados.map((t) => (
+      <Table aria-label="Trabajadores" removeWrapper>
+        <TableHeader>
+          <TableColumn>CI</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Cargo</TableColumn>
+          <TableColumn>UEB</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay trabajadores registrados.">
+          {loading
+            ? <TableSkeleton columns={6} />
+            : trabajadoresFiltrados.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-mono text-sm">{t.ci}</TableCell>
                 <TableCell className="font-medium">{t.nombre} {t.apellidos}</TableCell>
@@ -139,10 +138,10 @@ export default function AdminTrabajadores() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>

@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/lib/auth/AuthContext";
 import { getCatalogos, createCatalogo, updateCatalogo, deleteCatalogo } from "@/lib/services/catalogo.service";
 import type { Catalogo } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminCatalogos() {
   const { empresa } = useAuth();
@@ -78,17 +79,16 @@ export default function AdminCatalogos() {
         <Button color="primary" onPress={abrirCrear}>+ Nuevo catálogo</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Catálogos" removeWrapper>
-          <TableHeader>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay catálogos registrados.">
-            {catalogos.map((c) => (
+      <Table aria-label="Catálogos" removeWrapper>
+        <TableHeader>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay catálogos registrados.">
+          {loading
+            ? <TableSkeleton columns={3} />
+            : catalogos.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{c.nombre}</TableCell>
                 <TableCell><Chip color={c.activo ? "success" : "default"} variant="flat" size="sm">{c.activo ? "Activo" : "Inactivo"}</Chip></TableCell>
@@ -101,10 +101,10 @@ export default function AdminCatalogos() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>

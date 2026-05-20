@@ -12,6 +12,7 @@ import { getOrdenesTrabajo, validarOrdenTrabajo } from "@/lib/services/orden-tra
 import { getUEBsByEmpresa } from "@/lib/services/ueb.service";
 import type { OrdenTrabajoDetalle, UEB, EstadoOrdenTrabajo, ValidarOrdenTrabajoDto } from "@/types/models";
 import Link from "next/link";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 const ESTADO_COLOR: Record<EstadoOrdenTrabajo, "warning" | "success" | "danger"> = {
   pendiente: "warning",
@@ -56,7 +57,7 @@ export default function AdminOrdenesTrabajo() {
     } finally {
       setLoading(false);
     }
-  }, [empresa, filtroUeb, filtroEstado, filtroDesde, filtroHasta]);
+  }, [empresa, filtroEstado, filtroDesde, filtroHasta]);
 
   useEffect(() => {
     if (!empresa) return;
@@ -135,23 +136,21 @@ export default function AdminOrdenesTrabajo() {
         <Input label="Hasta" type="date" value={filtroHasta} onValueChange={setFiltroHasta}/>
       </div>
 
-      {/* Tabla */}
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Órdenes de trabajo" removeWrapper>
-          <TableHeader>
-            <TableColumn>Fecha</TableColumn>
-            <TableColumn>Expediente</TableColumn>
-            <TableColumn>Actividad</TableColumn>
-            <TableColumn>UEB</TableColumn>
-            <TableColumn>Cantidad</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Creado por</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay órdenes de trabajo.">
-            {ordenesFiltradas.map((ot) => (
+      <Table aria-label="Órdenes de trabajo" removeWrapper>
+        <TableHeader>
+          <TableColumn>Fecha</TableColumn>
+          <TableColumn>Expediente</TableColumn>
+          <TableColumn>Actividad</TableColumn>
+          <TableColumn>UEB</TableColumn>
+          <TableColumn>Cantidad</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Creado por</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay órdenes de trabajo.">
+          {loading
+            ? <TableSkeleton columns={8} />
+            : ordenesFiltradas.map((ot) => (
               <TableRow key={ot.id}>
                 <TableCell className="whitespace-nowrap">{formatFecha(ot.fecha_ejecucion)}</TableCell>
                 <TableCell>
@@ -194,10 +193,10 @@ export default function AdminOrdenesTrabajo() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       {/* Modal confirmar */}
       <Modal isOpen={isOpen} onClose={onClose}>

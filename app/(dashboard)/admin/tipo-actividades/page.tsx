@@ -12,13 +12,14 @@ import {
   updateTipoActividad, deleteTipoActividad,
 } from "@/lib/services/catalogo.service";
 import type { Catalogo, TipoActividad } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminTipoActividades() {
   const { empresa } = useAuth();
   const [catalogos, setCatalogos] = useState<Catalogo[]>([]);
   const [tipos, setTipos] = useState<TipoActividad[]>([]);
   const [filtroCatalogo, setFiltroCatalogo] = useState<string>("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
@@ -104,8 +105,6 @@ export default function AdminTipoActividades() {
 
       {!filtroCatalogo ? (
         <p className="text-sm text-default-400">Selecciona un catálogo para ver sus tipos de actividad.</p>
-      ) : loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
       ) : (
         <Table aria-label="Tipos de actividad" removeWrapper>
           <TableHeader>
@@ -115,7 +114,9 @@ export default function AdminTipoActividades() {
             <TableColumn>Acciones</TableColumn>
           </TableHeader>
           <TableBody emptyContent="No hay tipos de actividad.">
-            {tipos.map((t) => (
+            {loading
+              ? <TableSkeleton columns={4} />
+              : tipos.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-medium">{t.nombre}</TableCell>
                 <TableCell className="text-sm text-default-500">{catalogoNombre(t.catalogo_id)}</TableCell>
@@ -129,7 +130,8 @@ export default function AdminTipoActividades() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              ))
+            }
           </TableBody>
         </Table>
       )}

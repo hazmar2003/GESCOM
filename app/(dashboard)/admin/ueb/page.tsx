@@ -11,6 +11,7 @@ import {
   getUEBsByEmpresa, createUEB, updateUEB, deleteUEB,
 } from "@/lib/services/ueb.service";
 import type { UEB } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminUEB() {
   const { empresa } = useAuth();
@@ -103,18 +104,17 @@ export default function AdminUEB() {
         <Button color="primary" onPress={abrirCrear}>+ Nueva UEB</Button>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="UEBs" removeWrapper>
-          <TableHeader>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Ubicación</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay UEBs registradas.">
-            {uebs.map((u) => (
+      <Table aria-label="UEBs" removeWrapper>
+        <TableHeader>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Ubicación</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay UEBs registradas.">
+          {loading
+            ? <TableSkeleton columns={4} />
+            : uebs.map((u) => (
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.nombre}</TableCell>
                 <TableCell className="text-sm text-default-500">{u.ubicacion ?? "—"}</TableCell>
@@ -132,10 +132,10 @@ export default function AdminUEB() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       {/* Modal crear/editar */}
       <Modal isOpen={isOpen} onClose={onClose}>

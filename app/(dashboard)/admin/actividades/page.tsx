@@ -12,6 +12,7 @@ import {
   createActividad, updateActividad, deleteActividad,
 } from "@/lib/services/catalogo.service";
 import type { Catalogo, TipoActividad, Actividad } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminActividades() {
   const { empresa } = useAuth();
@@ -19,7 +20,7 @@ export default function AdminActividades() {
   const [tiposAll, setTiposAll] = useState<TipoActividad[]>([]);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [filtroCatalogo, setFiltroCatalogo] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -133,22 +134,21 @@ export default function AdminActividades() {
         </Select>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Actividades" removeWrapper>
-          <TableHeader>
-            <TableColumn>Código</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Tipo</TableColumn>
-            <TableColumn>Unidad</TableColumn>
-            <TableColumn>Norma tiempo</TableColumn>
-            <TableColumn>Tasa salarial</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay actividades registradas.">
-            {actividadesFiltradas.map((a) => (
+      <Table aria-label="Actividades" removeWrapper>
+        <TableHeader>
+          <TableColumn>Código</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Tipo</TableColumn>
+          <TableColumn>Unidad</TableColumn>
+          <TableColumn>Norma tiempo</TableColumn>
+          <TableColumn>Tasa salarial</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay actividades registradas.">
+          {loading
+            ? <TableSkeleton columns={8} />
+            : actividadesFiltradas.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="font-mono text-sm">{a.codigo}</TableCell>
                 <TableCell className="font-medium">{a.nombre}</TableCell>
@@ -171,10 +171,10 @@ export default function AdminActividades() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalContent>

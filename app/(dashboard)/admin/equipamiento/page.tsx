@@ -10,13 +10,14 @@ import { useAuth } from "@/lib/auth/AuthContext";
 import { getEquipamiento, createEquipamiento, updateEquipamiento, deleteEquipamiento } from "@/lib/services/equipamiento.service";
 import { getUEBsByEmpresa } from "@/lib/services/ueb.service";
 import type { Equipamiento, UEB } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminEquipamiento() {
   const { empresa } = useAuth();
   const [uebs, setUebs] = useState<UEB[]>([]);
   const [equipamientos, setEquipamientos] = useState<Equipamiento[]>([]);
   const [filtroUEB, setFiltroUEB] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -31,20 +32,19 @@ export default function AdminEquipamiento() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!empresa) return;
-    getUEBsByEmpresa().then(setUebs);
-  }, [empresa]);
-
   const cargar = useCallback(async () => {
     if (!empresa) return;
-    setLoading(true);
     const data = await getEquipamiento();
     setEquipamientos(data);
-    setLoading(false);
-  }, [empresa, filtroUEB]);
+  }, [empresa]);
 
-  useEffect(() => { cargar(); }, [cargar]);
+  useEffect(() => {
+    if (!empresa) return;
+    setLoading(true);
+    Promise.all([getEquipamiento(), getUEBsByEmpresa()])
+      .then(([equip, ubs]) => { setEquipamientos(equip); setUebs(ubs); })
+      .finally(() => setLoading(false));
+  }, [empresa]);
 
   const resetForm = () => { setCodigo(""); setNombre(""); setTipo(""); setUebId(""); setError(""); };
   const abrirCrear = () => { setEditando(null); resetForm(); onOpen(); };
@@ -104,20 +104,19 @@ export default function AdminEquipamiento() {
         </Select>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Equipamiento" removeWrapper>
-          <TableHeader>
-            <TableColumn>Código</TableColumn>
-            <TableColumn>Nombre</TableColumn>
-            <TableColumn>Tipo</TableColumn>
-            <TableColumn>UEB</TableColumn>
-            <TableColumn>Estado</TableColumn>
-            <TableColumn>Acciones</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay equipamiento registrado.">
-            {equipamientos.map((e) => (
+      <Table aria-label="Equipamiento" removeWrapper>
+        <TableHeader>
+          <TableColumn>Código</TableColumn>
+          <TableColumn>Nombre</TableColumn>
+          <TableColumn>Tipo</TableColumn>
+          <TableColumn>UEB</TableColumn>
+          <TableColumn>Estado</TableColumn>
+          <TableColumn>Acciones</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay equipamiento registrado.">
+          {loading
+            ? <TableSkeleton columns={6} />
+            : equipamientos.map((e) => (
               <TableRow key={e.id}>
                 <TableCell className="font-mono text-sm">{e.codigo_inventario}</TableCell>
                 <TableCell className="font-medium">{e.nombre}</TableCell>
@@ -133,10 +132,10 @@ export default function AdminEquipamiento() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalContent>

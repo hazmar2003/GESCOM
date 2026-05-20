@@ -12,6 +12,7 @@ import { contarOrdenesPendientesMes } from "@/lib/services/orden-trabajo.service
 import type { CierreMensualDetalle } from "@/types/models";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -155,18 +156,17 @@ export default function AdminCierres() {
 
       <Divider />
 
-      {loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
-      ) : (
-        <Table aria-label="Cierres mensuales" removeWrapper>
-          <TableHeader>
-            <TableColumn>Período</TableColumn>
-            <TableColumn>Cerrado el</TableColumn>
-            <TableColumn>Cerrado por</TableColumn>
-            <TableColumn>Reporte</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="No hay cierres registrados.">
-            {cierres.map((c) => (
+      <Table aria-label="Cierres mensuales" removeWrapper>
+        <TableHeader>
+          <TableColumn>Período</TableColumn>
+          <TableColumn>Cerrado el</TableColumn>
+          <TableColumn>Cerrado por</TableColumn>
+          <TableColumn>Reporte</TableColumn>
+        </TableHeader>
+        <TableBody emptyContent="No hay cierres registrados.">
+          {loading
+            ? <TableSkeleton columns={4} rows={3} />
+            : cierres.map((c) => (
               <TableRow key={c.id}>
                 <TableCell className="font-medium">{MESES[c.mes - 1]} {c.anio}</TableCell>
                 <TableCell className="text-sm">{new Date(c.fecha_cierre).toLocaleString("es-CU")}</TableCell>
@@ -177,10 +177,10 @@ export default function AdminCierres() {
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+            ))
+          }
+        </TableBody>
+      </Table>
 
       {/* Modal confirmar cierre */}
       <Modal isOpen={isOpen} onClose={onClose}>

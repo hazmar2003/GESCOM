@@ -13,6 +13,7 @@ import {
 } from "@/lib/services/expediente.service";
 import { getActividades } from "@/lib/services/catalogo.service";
 import type { Expediente, PlanificacionExpediente, Actividad } from "@/types/models";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 
 export default function AdminPlanificaciones() {
   const { empresa } = useAuth();
@@ -20,7 +21,7 @@ export default function AdminPlanificaciones() {
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [planificaciones, setPlanificaciones] = useState<PlanificacionExpediente[]>([]);
   const [filtroExp, setFiltroExp] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
@@ -157,8 +158,6 @@ export default function AdminPlanificaciones() {
 
       {!filtroExp ? (
         <p className="text-sm text-default-400">Selecciona un expediente para ver sus planificaciones.</p>
-      ) : loading ? (
-        <div className="flex justify-center py-16"><Spinner label="Cargando..." /></div>
       ) : (
         <div className="overflow-x-auto">
           <Table aria-label="Planificaciones" removeWrapper>
@@ -176,7 +175,9 @@ export default function AdminPlanificaciones() {
               <TableColumn>Acciones</TableColumn>
             </TableHeader>
             <TableBody emptyContent="No hay actividades planificadas. Usa '+ Nueva actividad' para agregar.">
-              {planificaciones.map((p) => {
+              {loading
+                ? <TableSkeleton columns={11} rows={3} />
+                : planificaciones.map((p) => {
                 const { norma, tasa, trabajo, valorCreado, normaXTasa, formaSalario } = calcular(p);
                 return (
                   <TableRow key={p.id}>
@@ -201,7 +202,8 @@ export default function AdminPlanificaciones() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
+              })
+            }
             </TableBody>
           </Table>
         </div>
